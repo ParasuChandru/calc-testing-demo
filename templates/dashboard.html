@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator App — Live Testing Dashboard</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #eab308;
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        header {
+            text-align: center;
+            padding: 40px 0 30px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        header p { color: var(--text-dim); font-size: 1.1rem; }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .status-badge.healthy { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+        .status-badge.unhealthy { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card h2 .icon { font-size: 1.4rem; }
+
+        /* Test Runner Section */
+        .framework-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .framework-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .framework-btn:hover { border-color: var(--accent); }
+        .framework-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+        .run-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .run-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(59,130,246,0.4); }
+        .run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .run-btn.running {
+            background: linear-gradient(135deg, #eab308, #f59e0b);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Results */
+        .results-container { margin-top: 20px; }
+
+        .results-summary {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .result-stat {
+            flex: 1;
+            min-width: 100px;
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .result-stat.total { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); }
+        .result-stat.passed { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); }
+        .result-stat.failed { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); }
+        .result-stat.duration { background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); }
+
+        .result-stat .number { font-size: 1.8rem; font-weight: 700; }
+        .result-stat .label { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; }
+
+        .result-stat.passed .number { color: var(--green); }
+        .result-stat.failed .number { color: var(--red); }
+        .result-stat.total .number { color: var(--accent); }
+        .result-stat.duration .number { color: var(--yellow); }
+
+        .framework-results { margin-top: 16px; }
+
+        .fw-result {
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        .fw-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .fw-result-name { font-weight: 600; font-size: 1rem; }
+        .fw-result-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .fw-result-badge.pass { background: rgba(34,197,94,0.15); color: var(--green); }
+        .fw-result-badge.fail { background: rgba(239,68,68,0.15); color: var(--red); }
+
+        .fw-result-details { font-size: 0.85rem; color: var(--text-dim); }
+
+        .fail-list {
+            margin-top: 8px;
+            padding: 10px;
+            background: rgba(239,68,68,0.08);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--red);
+        }
+
+        /* API Tester */
+        .api-endpoint {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .api-endpoint:hover { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+
+        .api-method {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        .api-method.get { background: rgba(34,197,94,0.2); color: var(--green); }
+        .api-method.post { background: rgba(59,130,246,0.2); color: var(--accent); }
+
+        .api-path { font-family: monospace; color: var(--text); }
+
+        /* Test Inputs */
+        .test-inputs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .test-inputs input {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .test-inputs input:focus { outline: none; border-color: var(--accent); }
+
+        .test-inputs button {
+            padding: 10px 20px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .test-inputs button:hover { background: var(--accent-hover); }
+
+        .api-response {
+            margin-top: 12px;
+            padding: 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .api-response.visible { display: block; }
+
+        .api-response .success { color: var(--green); }
+        .api-response .error { color: var(--red); }
+
+        /* Console Output */
+        .console {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+            max-height: 300px;
+            overflow-y: auto;
+            line-height: 1.8;
+        }
+
+        .console .log-pass { color: var(--green); }
+        .console .log-fail { color: var(--red); }
+        .console .log-info { color: var(--text-dim); }
+        .console .log-header { color: var(--accent); font-weight: 600; }
+
+        /* Health Check */
+        .health-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .health-indicator.up { background: var(--green); box-shadow: 0 0 8px var(--green); }
+        .health-indicator.down { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧮 Calculator App</h1>
+            <p>Live Testing Dashboard — Deployed &amp; Ready</p>
+            <div class="status-bar">
+                <span class="status-badge healthy" id="healthBadge">
+                    <span class="health-indicator up" id="healthDot"></span>
+                    <span id="healthText">Healthy</span>
+                </span>
+                <span class="status-badge healthy" id="versionBadge">v1.0.0</span>
+            </div>
+        </header>
+
+        <div class="grid">
+            <!-- LEFT: Live Test Runner -->
+            <div class="card">
+                <h2><span class="icon">🧪</span> Test Runner</h2>
+
+                <div class="framework-selector">
+                    <button class="framework-btn active" data-fw="unittest">unittest</button>
+                    <button class="framework-btn active" data-fw="pytest">pytest</button>
+                    <button class="framework-btn active" data-fw="doctest">doctest</button>
+                    <button class="framework-btn active" data-fw="functional">functional</button>
+                </div>
+
+                <button class="run-btn" id="runTestsBtn" onclick="runAllTests()">
+                    ▶ Run All Tests
+                </button>
+
+                <div class="results-container" id="resultsContainer" style="display:none;">
+                    <div class="results-summary" id="resultsSummary"></div>
+                    <div class="framework-results" id="frameworkResults"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT: API Tester -->
+            <div class="card">
+                <h2><span class="icon">🔌</span> API Tester</h2>
+
+                <div class="api-endpoints-list">
+                    <div class="api-endpoint" onclick="testEndpoint('add')">
+                        <span class="api-method get">GET</span>
+                        <span class="api-path">/api/add?a=5&b=3</span>
+                    </div>
+                    <div class="api-endpoint" onclick="testEndpoint('subtract')">
+                        <span class="api-method get">GET</span>
+                        <span class="api-path">/api/subtract?a=10&b=4</span>
+                    </div>
+                    <div class="api-endpoint" onclick="testEndpoint('multiply')">
+                        <span class="api-method get">GET</span>
+                        <span class="api-path">/api/multiply?a=6&b=7</span>
+                    </div>
+                    <div class="api-endpoint" onclick="testEndpoint('divide')">
+                        <span class="api-method get">GET</span>
+                        <span class="api-path">/api/divide?a=15&b=3</span>
+                    </div>
+                    <div class="api-endpoint" onclick="testEndpoint('factorial')">
+                        <span class="api-method get">GET</span>
+                        <span class="api-path">/api/factorial?n=10</span>
+                    </div>
+                    <div class="api-endpoint" onclick="testEndpoint('is_palindrome')">
+                        <span class="api-method get">GET</span>
+                        <span class="api-path">/api/is_palindrome?text=racecar</span>
+                    </div>
+                    <div class="api-endpoint" onclick="testEndpoint('fizz_buzz')">
+                        <span class="api-method get">GET</span>
+                        <span class="api-path">/api/fizz_buzz?n=15</span>
+                    </div>
+                </div>
+
+                <div class="test-inputs">
+                    <input type="text" id="customA" placeholder="a">
+                    <input type="text" id="customB" placeholder="b or n">
+                    <select id="customOp" style="padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+                        <option value="add">add</option>
+                        <option value="subtract">subtract</option>
+                        <option value="multiply">multiply</option>
+                        <option value="divide">divide</option>
+                        <option value="power">power</option>
+                        <option value="factorial">factorial</option>
+                    </select>
+                    <button onclick="testCustom()">Send</button>
+                </div>
+
+                <div class="api-response" id="apiResponse"></div>
+            </div>
+        </div>
+
+        <!-- Bottom: Console Output -->
+        <div class="card">
+            <h2><span class="icon">📟</span> Live Console</h2>
+            <div class="console" id="console">
+                <div class="log-info">[ready] Click "Run All Tests" or any API endpoint above to get started.</div>
+            </div>
+        </div>
+
+        <footer>
+            Calculator App — Deployed &amp; Testing Live — Built with Flask + pytest + unittest
+        </footer>
+    </div>
+
+    <script>
+        // Framework selection
+        let selectedFrameworks = ['unittest', 'pytest', 'doctest', 'functional'];
+
+        document.querySelectorAll('.framework-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('active');
+                const fw = btn.dataset.fw;
+                if (btn.classList.contains('active')) {
+                    if (!selectedFrameworks.includes(fw)) selectedFrameworks.push(fw);
+                } else {
+                    selectedFrameworks = selectedFrameworks.filter(f => f !== fw);
+                }
+            });
+        });
+
+        function log(msg, cls = 'log-info') {
+            const c = document.getElementById('console');
+            const line = document.createElement('div');
+            line.className = cls;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            c.appendChild(line);
+            c.scrollTop = c.scrollHeight;
+        }
+
+        // Health check
+        async function checkHealth() {
+            try {
+                const r = await fetch('/api/health');
+                const d = await r.json();
+                const badge = document.getElementById('healthBadge');
+                const text = document.getElementById('healthText');
+                const dot = document.getElementById('healthDot');
+
+                if (r.ok) {
+                    badge.className = 'status-badge healthy';
+                    dot.className = 'health-indicator up';
+                    text.textContent = 'Healthy';
+                } else {
+                    badge.className = 'status-badge unhealthy';
+                    dot.className = 'health-indicator down';
+                    text.textContent = 'Degraded';
+                }
+                log(`Health: ${d.status} — ${d.timestamp}`, 'log-info');
+            } catch (e) {
+                log(`Health check failed: ${e.message}`, 'log-fail');
+            }
+        }
+
+        // Run all tests
+        async function runAllTests() {
+            const btn = document.getElementById('runTestsBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Running...';
+            btn.classList.add('running');
+            document.getElementById('resultsContainer').style.display = 'none';
+
+            log('🧪 Starting test suite...', 'log-header');
+
+            try {
+                const r = await fetch('/api/run-tests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frameworks: selectedFrameworks })
+                });
+                const data = await r.json();
+                renderResults(data);
+                log(`✅ Tests complete: ${data.total_passed}/${data.total_tests} passed`, 'log-pass');
+                log(`⏱ Duration: ${data.duration_seconds}s`, 'log-info');
+            } catch (e) {
+                log(`❌ Test run failed: ${e.message}`, 'log-fail');
+            }
+
+            btn.disabled = false;
+            btn.textContent = '▶ Run All Tests';
+            btn.classList.remove('running');
+        }
+
+        function renderResults(data) {
+            document.getElementById('resultsContainer').style.display = 'block';
+
+            // Summary
+            document.getElementById('resultsSummary').innerHTML = `
+                <div class="result-stat total"><div class="number">${data.total_tests}</div><div class="label">Total</div></div>
+                <div class="result-stat passed"><div class="number">${data.total_passed}</div><div class="label">Passed</div></div>
+                <div class="result-stat failed"><div class="number">${data.total_failed + data.total_errors}</div><div class="label">Failed</div></div>
+                <div class="result-stat duration"><div class="number">${data.duration_seconds}s</div><div class="label">Time</div></div>
+            `;
+
+            // Framework results
+            let html = '';
+            for (const [name, fw] of Object.entries(data.frameworks)) {
+                const allPassed = fw.failed === 0 && fw.errors === 0;
+                html += `
+                    <div class="fw-result">
+                        <div class="fw-result-header">
+                            <span class="fw-result-name">${name}</span>
+                            <span class="fw-result-badge ${allPassed ? 'pass' : 'fail'}">
+                                ${fw.passed}/${fw.total} ${allPassed ? '✅' : '⚠️'}
+                            </span>
+                        </div>
+                        <div class="fw-result-details">
+                            ${fw.passed} passed, ${fw.failed} failed, ${fw.errors} errors
+                        </div>
+                        ${fw.failures && fw.failures.length ? `<div class="fail-list">${fw.failures.join('<br>')}</div>` : ''}
+                        ${fw.output ? `<div class="fail-list" style="color:var(--yellow)">${fw.output.replace(/\n/g, '<br>')}</div>` : ''}
+                    </div>
+                `;
+            }
+            document.getElementById('frameworkResults').innerHTML = html;
+        }
+
+        // API testing
+        async function testEndpoint(name) {
+            log(`🔌 Testing ${name}...`, 'log-info');
+
+            try {
+                const r = await fetch(`/api/${name}?a=5&b=3`);
+                const data = await r.json();
+                const respEl = document.getElementById('apiResponse');
+                respEl.classList.add('visible');
+
+                if (r.ok) {
+                    respEl.innerHTML = `<span class="success">✅ ${r.status} OK</span>\n${JSON.stringify(data, null, 2)}`;
+                    log(`✅ ${name}: ${JSON.stringify(data)}`, 'log-pass');
+                } else {
+                    respEl.innerHTML = `<span class="error">❌ ${r.status} Error</span>\n${JSON.stringify(data, null, 2)}`;
+                    log(`❌ ${name}: ${JSON.stringify(data)}`, 'log-fail');
+                }
+            } catch (e) {
+                const respEl = document.getElementById('apiResponse');
+                respEl.classList.add('visible');
+                respEl.innerHTML = `<span class="error">❌ Network Error</span>\n${e.message}`;
+                log(`❌ ${name}: ${e.message}`, 'log-fail');
+            }
+        }
+
+        async function testCustom() {
+            const a = document.getElementById('customA').value;
+            const b = document.getElementById('customB').value;
+            const op = document.getElementById('customOp').value;
+            if (!a || !b) {
+                alert('Please fill in both values');
+                return;
+            }
+
+            const body = { operation: op, a: parseFloat(a), b: parseFloat(b) };
+
+            log(`🔌 POST /api/calculate → ${op}(${a}, ${b})`, 'log-info');
+
+            try {
+                const r = await fetch('/api/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await r.json();
+                const respEl = document.getElementById('apiResponse');
+                respEl.classList.add('visible');
+
+                if (r.ok) {
+                    respEl.innerHTML = `<span class="success">✅ ${r.status} OK</span>\n${JSON.stringify(data, null, 2)}`;
+                    log(`✅ Result: ${data.result}`, 'log-pass');
+                } else {
+                    respEl.innerHTML = `<span class="error">❌ ${r.status} Error</span>\n${JSON.stringify(data, null, 2)}`;
+                    log(`❌ Error: ${data.error}`, 'log-fail');
+                }
+            } catch (e) {
+                log(`❌ ${e.message}`, 'log-fail');
+            }
+        }
+
+        // Init
+        checkHealth();
+        setInterval(checkHealth, 30000); // Health check every 30s
+    </script>
+</body>
+</html>

@@ -1,47 +1,139 @@
-# Calculator App — Multi-Framework Testing Demo
+# Calculator App — Live Deployed & Tested
 
-A simple calculator application tested with three different Python testing frameworks.
+A Calculator web application with a **live testing dashboard**, REST API, and tests across multiple Python testing frameworks.
 
-## Application
+## 🚀 Quick Start
 
-`calculator.py` contains a `Calculator` class with the following methods:
+### Local Development
 
-| Method | Description |
-|---|---|
-| `add(a, b)` | Returns the sum |
-| `subtract(a, b)` | Returns the difference |
-| `multiply(a, b)` | Returns the product |
-| `divide(a, b)` | Returns the quotient |
-| `power(base, exponent)` | Returns base raised to exponent |
-| `factorial(n)` | Returns n! |
-| `is_palindrome(text)` | Checks if text is a palindrome |
-| `fizz_buzz(n)` | Returns FizzBuzz sequence up to n |
-
-## Testing Frameworks
-
-### 1. unittest (Python built-in)
 ```bash
-python -m unittest test_calculator_unittest -v
-```
-
-### 2. pytest
-```bash
+# Install dependencies
 pip install -r requirements.txt
-python -m pytest test_calculator_pytest.py -v
+
+# Run the Flask dev server
+python app.py
 ```
 
-### 3. doctest
+Open your browser to **http://localhost:5000**
+
+### Production Deployment
+
 ```bash
+# With Gunicorn
+pip install gunicorn
+gunicorn app:app --bind 0.0.0.0:5000
+```
+
+## 📐 Deployment Options
+
+### Option 1: Heroku (Easiest)
+
+```bash
+# Install Heroku CLI, then:
+heroku create your-app-name
+git push heroku main
+heroku open
+```
+
+### Option 2: Docker
+
+```bash
+docker build -t calculator-app .
+docker run -p 5000:5000 calculator-app
+```
+
+### Option 3: Railway / Render / Fly.io
+
+Push to GitHub → connect your repo → auto-deploy.
+
+### Option 4: AWS EC2 / Lightsail
+
+```bash
+# On the server
+sudo apt update && sudo apt install python3-pip docker.io -y
+sudo systemctl start docker
+sudo usermod -aG docker $USER
+newgrp docker
+docker build -t calculator-app .
+docker run -d -p 5000:5000 --name calculator calculator-app
+```
+
+## 🌐 API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET/POST | `/api/add?a=5&b=3` | Add |
+| GET/POST | `/api/subtract?a=10&b=4` | Subtract |
+| GET/POST | `/api/multiply?a=6&b=7` | Multiply |
+| GET/POST | `/api/divide?a=15&b=3` | Divide |
+| GET/POST | `/api/power?a=2&b=8` | Power |
+| GET/POST | `/api/factorial?n=10` | Factorial |
+| GET/POST | `/api/is_palindrome?text=racecar` | Palindrome check |
+| GET/POST | `/api/fizz_buzz?n=15` | FizzBuzz |
+| POST | `/api/calculate` | Unified (JSON body) |
+| GET | `/api/health` | Health check |
+
+### Unified API Example
+
+```bash
+curl -X POST http://localhost:5000/api/calculate \
+  -H "Content-Type: application/json" \
+  -d '{"operation": "add", "a": 5, "b": 3}'
+```
+
+## 🧪 Testing
+
+### Run All Tests
+
+```bash
+# Unit tests (Python built-in)
+python -m unittest test_calculator_unittest -v
+
+# Pytest
+pytest test_calculator_pytest.py -v
+
+# Doctest
 python -m doctest test_calculator_doctest.py -v
 ```
 
-## Project Structure
+### Live Test Runner
+
+Visit **http://localhost:5000** and click **"Run All Tests"** on the dashboard.
+The dashboard runs unittest, pytest, doctest, and functional tests in real-time
+and shows results with pass/fail counts.
+
+## 📁 Project Structure
 
 ```
-├── calculator.py          # Application code
+├── app.py                  # Flask server + API + test runner
+├── calculator.py           # Application logic
+├── templates/
+│   └── dashboard.html      # Live testing UI
 ├── test_calculator_unittest.py   # unittest framework tests
 ├── test_calculator_pytest.py     # pytest framework tests
-├── test_calculator_doctest.py    # Doctest framework tests
-├── requirements.txt           # Dependencies
-└── README.md                  # This file
+├── test_calculator_doctest.py    # Doctest tests
+├── requirements.txt        # Python dependencies
+├── Procfile                # Heroku deployment config
+├── Dockerfile              # Container deployment config
+└── README.md               # This file
+```
+
+## 🏗 Architecture
+
+```
+Browser (Dashboard UI)
+    │
+    ├──→ Flask API Server (app.py)
+    │       ├── REST endpoints (/api/*)
+    │       ├── Health check (/api/health)
+    │       └── Live test runner (/api/run-tests)
+    │               ├── unittest suite
+    │               ├── pytest suite
+    │               ├── doctest suite
+    │               └── functional smoke tests
+    │
+    └──→ Calculator Module (calculator.py)
+            ├── add, subtract, multiply, divide
+            ├── power, factorial
+            ├── is_palindrome, fizz_buzz
 ```
