@@ -25,6 +25,14 @@ Open your browser to **http://localhost:5000**
 > PORT=5001 python app.py   # then open http://localhost:5001
 > ```
 
+Dev-server environment variables (all optional):
+
+| Var | Default | Purpose |
+|-----|---------|---------|
+| `PORT` | `5000` | Port to bind |
+| `HOST` | `127.0.0.1` | Interface to bind (use `0.0.0.0` to expose externally) |
+| `FLASK_DEBUG` | `0` | Set to `1` to enable debug/auto-reload |
+
 ### Production Deployment
 
 ```bash
