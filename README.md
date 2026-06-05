@@ -16,6 +16,15 @@ python app.py
 
 Open your browser to **http://localhost:5000**
 
+> **macOS note:** Port 5000 is used by macOS Control Center's **AirPlay Receiver**,
+> which responds with `HTTP ERROR 403 (Access to localhost was denied)`. Either turn it
+> off (System Settings → General → AirDrop & Handoff → AirPlay Receiver) or run the app
+> on a different port via the `PORT` env var:
+>
+> ```bash
+> PORT=5001 python app.py   # then open http://localhost:5001
+> ```
+
 ### Production Deployment
 
 ```bash
